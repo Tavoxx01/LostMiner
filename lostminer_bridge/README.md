@@ -30,6 +30,34 @@ python3 server.py --host 0.0.0.0 --mc-port 25565 --lostminer-port 25570 --lostmi
 
 O APK original deve receber o IP do servidor e a porta `4773`. A porta `25570` continua sendo somente do conector JSON experimental.
 
+### Liberar a porta UDP automaticamente
+
+Na VPS Ubuntu, execute:
+
+```bash
+python3 setup_firewall.py
+```
+
+Esse script libera somente `4773/udp` no UFW. Ele não cria, remove nem altera regras da porta TCP do Minecraft.
+
+Para conferir as regras sem alterar nada:
+
+```bash
+python3 setup_firewall.py --check
+```
+
+Para descobrir o IP público da VPS:
+
+```bash
+curl -4 ifconfig.me
+```
+
+O endereço usado no LostMiner será:
+
+```text
+IP_PUBLICO_DA_VPS:4773
+```
+
 ## Instalação Linux
 
 ```bash
