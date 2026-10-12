@@ -21,8 +21,11 @@ def main():
     args = ap.parse_args()
 
     if shutil.which("ufw") is None:
-        print("Erro: ufw não está instalado. Instale com: sudo apt update && sudo apt install -y ufw", file=sys.stderr)
-        return 2
+        print("UFW não encontrado; instalando automaticamente...")
+        if run(["sudo", "apt-get", "update"]) != 0:
+            return 2
+        if run(["sudo", "apt-get", "install", "-y", "ufw"]) != 0:
+            return 2
     if args.check:
         return run(["sudo", "ufw", "status", "verbose"])
 
