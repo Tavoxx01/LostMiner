@@ -1,0 +1,15 @@
+[Unit]
+Description=LostMiner Bridge Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/lostminer_bridge
+ExecStart=/usr/bin/python3 /opt/lostminer_bridge/server.py --host 0.0.0.0 --mc-port 25565 --lostminer-port 25570 --world /opt/lostminer_bridge/world/world.json
+Restart=on-failure
+RestartSec=5
+User=lostminer
+
+[Install]
+WantedBy=multi-user.target

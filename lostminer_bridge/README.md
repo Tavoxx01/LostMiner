@@ -98,6 +98,36 @@ sudo ufw allow 25570/tcp
 
 O APK modificado precisa ganhar uma tela/ opção `Servidor Python` e implementar o contrato acima. A rede original do LostMiner continuará disponível separadamente.
 
+## Deploy no Railway
+
+O repositório inclui `Dockerfile`, `railway.toml` e política de reinício. No Railway:
+
+1. Crie um projeto a partir de `Tavoxx01/LostMiner`.
+2. Faça o deploy usando o `Dockerfile` da raiz.
+3. Adicione um **Volume** montado em `/app/world` para o `world.json` sobreviver aos redeploys.
+4. Em **Settings > Networking**, crie um **TCP Proxy** para a porta interna `25565`.
+5. Use o host e a porta TCP gerados pelo Railway no Minecraft.
+6. Para o conector LostMiner, crie outro TCP Proxy para a porta interna `25570`.
+
+O domínio HTTP do Railway não é o endereço do Minecraft. Para o Minecraft, use o host e a porta mostrados no TCP Proxy.
+
+## Deploy em VPS Ubuntu
+
+```bash
+sudo apt update && sudo apt install -y python3 python3-pip git
+sudo git clone https://github.com/Tavoxx01/LostMiner.git /opt/lostminer_bridge
+cd /opt/lostminer_bridge/lostminer_bridge
+sudo pip3 install -r requirements.txt
+sudo useradd --system --home /opt/lostminer_bridge --shell /usr/sbin/nologin lostminer || true
+sudo chown -R lostminer:lostminer /opt/lostminer_bridge
+sudo cp lostminer-bridge.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now lostminer-bridge
+sudo ufw allow 25565/tcp
+sudo ufw allow 25570/tcp
+sudo systemctl status lostminer-bridge
+```
+
 ## Sobre Render
 
 O Render Web Service foi projetado para receber tráfego HTTP em uma porta informada pela variável `PORT`; ele não fornece uma porta TCP pública arbitrária para clientes Minecraft. Portanto, este servidor não deve ser publicado diretamente como Web Service no Render para jogadores entrarem pelo endereço HTTP.
