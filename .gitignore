@@ -1,0 +1,4 @@
+lostminer_bridge/world/*.json
+lostminer_bridge/world/*.tmp
+lostminer_bridge/__pycache__/
+*.pyc
