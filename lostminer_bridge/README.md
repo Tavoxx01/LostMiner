@@ -14,10 +14,21 @@ Servidor Python experimental para compartilhar um mundo autoritativo entre Minec
 - Quebra de blocos via pacote de digging.
 - Salvamento em `world/world.json`.
 - Listener local para um cliente LostMiner modificado em `25570`.
+- Sinalização nativa do APK original via UDP `4773` e oferta/resposta WebRTC.
 
 ## Limitação importante
 
 O APK original do LostMiner usa UDP/WebRTC e não conecta diretamente ao listener JSON deste pacote. O listener `25570` é o contrato do **conector que deverá ser adicionado ao APK modificado**. Não é correto afirmar que o APK original já funciona com ele.
+
+O servidor agora também implementa a primeira camada do protocolo nativo do APK: descoberta `0xFF`, `WANTSCLIENT` (`20`), `CLIENTOK` (`21`), `IDOK` (`22`) e negociação de oferta/resposta WebRTC usando os canais `RC` e `UC`.
+
+Para testar o APK original em uma rede local, use a porta UDP `4773`:
+
+```bash
+python3 server.py --host 0.0.0.0 --mc-port 25565 --lostminer-port 25570 --lostminer-udp-port 4773
+```
+
+O APK original deve receber o IP do servidor e a porta `4773`. A porta `25570` continua sendo somente do conector JSON experimental.
 
 ## Instalação Linux
 
@@ -108,6 +119,8 @@ O repositório inclui `Dockerfile`, `railway.toml` e política de reinício. No 
 4. Em **Settings > Networking**, crie um **TCP Proxy** para a porta interna `25565`.
 5. Use o host e a porta TCP gerados pelo Railway no Minecraft.
 6. Para o conector LostMiner, crie outro TCP Proxy para a porta interna `25570`.
+
+O multiplayer nativo do APK original precisa de UDP `4773` para descoberta/sinalização. Railway TCP Proxy não encaminha UDP; portanto, o APK original não conseguirá usar o protocolo nativo através somente do Railway. Para isso, use uma VPS/host que ofereça UDP público ou mantenha o servidor na rede local. No Railway, use o conector TCP modificado em `25570`.
 
 O domínio HTTP do Railway não é o endereço do Minecraft. Para o Minecraft, use o host e a porta mostrados no TCP Proxy.
 

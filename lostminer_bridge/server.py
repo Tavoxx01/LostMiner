@@ -20,6 +20,7 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.types.chunk import BlockArray
+from lostminer_native import LostMinerNativeProtocol
 
 LOG = logging.getLogger("lostminer_bridge")
 
@@ -459,6 +460,7 @@ def main():
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--mc-port", type=int, default=25565)
     ap.add_argument("--lostminer-port", type=int, default=25570)
+    ap.add_argument("--lostminer-udp-port", type=int, default=4773)
     ap.add_argument("--world", default="world/world.json")
     ap.add_argument("--slice-z", type=int, default=0)
     ap.add_argument("--slice-depth", type=int, default=1)
@@ -471,11 +473,14 @@ def main():
     laco = getattr(reactor, "_asyncioEventloop", laco_asyncio)
     fabrica.listen(a.host, a.mc_port)
     laco.run_until_complete(run_lm(ponte, a.host, a.lostminer_port))
+    laco.run_until_complete(laco.create_datagram_endpoint(
+        lambda: LostMinerNativeProtocol(ponte), local_addr=(a.host, a.lostminer_udp_port)))
     porta_http = os.environ.get("PORT")
     if porta_http and int(porta_http) not in (a.mc_port, a.lostminer_port):
         laco.run_until_complete(run_http(ponte, a.host, int(porta_http), a.mc_port, a.lostminer_port))
         LOG.info("HTTP health: %s:%s", a.host, porta_http)
-    LOG.info("Minecraft: %s:%d | LostMiner: %s:%d", a.host, a.mc_port, a.host, a.lostminer_port)
+    LOG.info("Minecraft TCP: %s:%d | LostMiner JSON TCP: %s:%d | LostMiner nativo UDP: %s:%d",
+             a.host, a.mc_port, a.host, a.lostminer_port, a.host, a.lostminer_udp_port)
 
     def salvar():
         mundo.salvar()

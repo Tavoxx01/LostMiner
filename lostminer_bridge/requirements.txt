@@ -3,3 +3,4 @@ Twisted>=22.10
 cryptography>=41
 cached-property>=1.5
 bitstring<4.0
+aiortc==1.15.0
