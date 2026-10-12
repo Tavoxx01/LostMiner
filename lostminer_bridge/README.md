@@ -103,3 +103,28 @@ O APK modificado precisa ganhar uma tela/ opção `Servidor Python` e implementa
 O Render Web Service foi projetado para receber tráfego HTTP em uma porta informada pela variável `PORT`; ele não fornece uma porta TCP pública arbitrária para clientes Minecraft. Portanto, este servidor não deve ser publicado diretamente como Web Service no Render para jogadores entrarem pelo endereço HTTP.
 
 Para hospedar o protocolo Minecraft, use um host que ofereça TCP público, uma VPS, Railway com TCP Proxy, Koyeb TCP Proxy ou um túnel TCP como playit.gg. Se você usar o Render somente para painel/health-check, o jogo ainda precisará ficar em um host TCP separado.
+
+### Teste gratuito no Render
+
+O código agora detecta a variável `PORT` do Render e abre um endpoint HTTP de saúde nessa porta. Isso permite testar o deploy gratuitamente:
+
+1. No Render, clique em **New > Web Service**.
+2. Selecione o repositório privado `Tavoxx01/LostMiner`.
+3. Branch: `main`.
+4. Runtime: `Python 3`.
+5. Build Command:
+
+   ```bash
+   pip install -r lostminer_bridge/requirements.txt
+   ```
+
+6. Start Command:
+
+   ```bash
+   python3 lostminer_bridge/server.py --host 0.0.0.0 --mc-port 25565 --lostminer-port 25570
+   ```
+
+7. Selecione o plano **Free** e crie o serviço.
+8. Quando terminar, abra a URL `https://NOME.onrender.com`.
+
+Ela deverá responder com JSON contendo `ok: true`, `protocol: 340` e a quantidade de jogadores. Esse teste confirma que o processo iniciou, mas **não transforma a URL do Render em endereço Minecraft**: o Render encaminha apenas uma porta HTTP pública por Web Service.

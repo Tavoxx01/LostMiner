@@ -182,13 +182,36 @@ async def lm_handler(reader,writer,state):
 
 async def run_lm(state,host,port): return await asyncio.start_server(lambda r,w:lm_handler(r,w,state),host,port)
 
+async def http_health(reader, writer, state):
+    try:
+        await reader.readline()
+        while True:
+            line = await reader.readline()
+            if not line or line in (b'\r\n', b'\n'): break
+        body = json.dumps({"ok": True, "service": "lostminer-bridge", "protocol": 340,
+                           "minecraft_port": 25565, "lostminer_port": 25570,
+                           "players": len(state.players) + len(state.mc_players)}).encode()
+        writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n" +
+                     f"Content-Length: {len(body)}\r\nConnection: close\r\n\r\n".encode() + body)
+        await writer.drain()
+    finally:
+        writer.close()
+        try: await writer.wait_closed()
+        except Exception: pass
+
+async def run_http(state, host, port):
+    return await asyncio.start_server(lambda r,w: http_health(r,w,state), host, port)
+
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--host',default='0.0.0.0'); ap.add_argument('--mc-port',type=int,default=25565); ap.add_argument('--lostminer-port',type=int,default=25570); ap.add_argument('--world',default='world/world.json'); ap.add_argument('--slice-z',type=int,default=0); ap.add_argument('--slice-depth',type=int,default=1)
     a=ap.parse_args(); logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s')
     world=World(a.world,a.slice_z,a.slice_depth); state=BridgeState(world); factory=MCFactory(state)
     loop=asyncio.get_event_loop(); factory.listen(a.host,a.mc_port)
     lm_server=loop.run_until_complete(run_lm(state,a.host,a.lostminer_port))
+    render_port = os.environ.get('PORT')
+    http_server = loop.run_until_complete(run_http(state,a.host,int(render_port))) if render_port else None
     LOG.info('Minecraft: %s:%d | LostMiner: %s:%d',a.host,a.mc_port,a.host,a.lostminer_port)
+    if render_port: LOG.info('HTTP health: %s:%s',a.host,render_port)
     def save(): world.save(); LOG.info('Mundo salvo')
     reactor.addSystemEventTrigger('before','shutdown',save)
     try: reactor.run()
